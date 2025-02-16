@@ -19,7 +19,7 @@ jobs:
               - 'Directory.Build.props'
 
       - name: Publish
-        uses: alirezanet/publish-nuget@v3.0.4
+        uses: alirezanet/publish-nuget@v3.1.0
         with:
           PROJECT_FILE_PATH: src/WPFUI/WPFUI.csproj
           VERSION_FILE_PATH: src/Directory.Build.props
