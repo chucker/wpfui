@@ -17,7 +17,7 @@ internal interface INotifyIcon
     /// <summary>
     /// Gets or sets the notify icon shell data.
     /// </summary>
-    public Interop.Shell32.NOTIFYICONDATA ShellIconData { get; set; }
+    public Windows.Win32.UI.Shell.NOTIFYICONDATAW ShellIconData { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether the icon is currently registered in the tray area.
@@ -27,7 +27,7 @@ internal interface INotifyIcon
     /// <summary>
     /// Gets or sets the Shell identifier of the icon.
     /// </summary>
-    int Id { get; set; }
+    uint? Id { get; set; }
 
     /// <summary>
     /// Gets or sets the ToolTip text displayed when the mouse pointer rests on a notification area icon.

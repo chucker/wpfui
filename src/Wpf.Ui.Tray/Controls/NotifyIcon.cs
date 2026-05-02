@@ -26,16 +26,16 @@ namespace Wpf.Ui.Tray.Controls;
 /// &lt;/tray:NotifyIcon&gt;
 /// </code>
 /// </example>
-public class NotifyIcon : System.Windows.FrameworkElement, IDisposable
+public class NotifyIcon : FrameworkElement, IDisposable
 {
-    private readonly Wpf.Ui.Tray.Internal.InternalNotifyIconManager internalNotifyIconManager;
+    private readonly Internal.InternalNotifyIconManager internalNotifyIconManager;
 
     /// <summary>
     /// Gets or sets a value indicating whether the control is disposed.
     /// </summary>
     protected bool Disposed { get; set; } = false;
 
-    public int Id => internalNotifyIconManager.Id;
+    public uint? Id => internalNotifyIconManager.Id;
 
     /// <summary>
     /// Gets a value indicating whether the icon is registered in the tray menu.
@@ -243,7 +243,7 @@ public class NotifyIcon : System.Windows.FrameworkElement, IDisposable
 
     public NotifyIcon()
     {
-        internalNotifyIconManager = new Wpf.Ui.Tray.Internal.InternalNotifyIconManager();
+        internalNotifyIconManager = new Internal.InternalNotifyIconManager();
 
         RegisterHandlers();
 
@@ -364,7 +364,7 @@ public class NotifyIcon : System.Windows.FrameworkElement, IDisposable
             return;
         }
 
-        System.Diagnostics.Debug.WriteLine($"INFO | {typeof(NotifyIcon)} disposed.", "Wpf.Ui.NotifyIcon");
+        Debug.WriteLine($"INFO | {typeof(NotifyIcon)} disposed.", "Wpf.Ui.NotifyIcon");
 
         // Clean up event handlers
         DataContextChanged -= OnDataContextChanged;

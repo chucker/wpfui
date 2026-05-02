@@ -17,7 +17,7 @@ public interface INotifyIconService
     /// <summary>
     /// Gets the notify icon id.
     /// </summary>
-    public int Id { get; }
+    public uint? Id { get; }
 
     /// <summary>
     /// Gets a value indicating whether the notify icon is registered in the tray.

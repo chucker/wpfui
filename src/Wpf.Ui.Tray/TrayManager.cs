@@ -4,6 +4,10 @@
 // All Rights Reserved.
 
 using System.Windows;
+using Windows.Win32;
+using Windows.Win32.Foundation;
+using Windows.Win32.UI.Shell;
+using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Wpf.Ui.Tray;
 
@@ -72,36 +76,38 @@ internal static class TrayManager
             _ = Unregister(notifyIcon);
         }
 
-        notifyIcon.Id = TrayData.NotifyIcons.Count + 1;
+        notifyIcon.Id = (uint)(TrayData.NotifyIcons.Count + 1);
 
         notifyIcon.HookWindow = new TrayHandler(
             $"wpfui_th_{parentSource.Handle}_{notifyIcon.Id}",
-            parentSource.Handle
-        )
+            parentSource.Handle)
         {
-            ElementId = notifyIcon.Id,
+            ElementId = notifyIcon.Id.Value,
         };
 
-        notifyIcon.ShellIconData = new Interop.Shell32.NOTIFYICONDATA
+        notifyIcon.ShellIconData = new NOTIFYICONDATAW
         {
-            uID = notifyIcon.Id,
-            uFlags = Interop.Shell32.NIF.MESSAGE,
-            uCallbackMessage = (int)Interop.User32.WM.TRAYMOUSEMESSAGE,
-            hWnd = notifyIcon.HookWindow.Handle,
-            dwState = 0x2,
+            uID = notifyIcon.Id.Value,
+            uFlags = NOTIFY_ICON_DATA_FLAGS.NIF_MESSAGE,
+            uCallbackMessage = PInvoke.WM_TRAYMOUSEMESSAGE,
+            hWnd = new HWND(notifyIcon.HookWindow.Handle),
+            dwState = NOTIFY_ICON_STATE.NIS_SHAREDICON,
         };
 
         if (!string.IsNullOrEmpty(notifyIcon.TooltipText))
         {
-            notifyIcon.ShellIconData.szTip = notifyIcon.TooltipText;
-            notifyIcon.ShellIconData.uFlags |= Interop.Shell32.NIF.TIP;
+            notifyIcon.ShellIconData = notifyIcon.ShellIconData with
+            {
+                szTip = notifyIcon.TooltipText,
+                uFlags = notifyIcon.ShellIconData.uFlags | NOTIFY_ICON_DATA_FLAGS.NIF_TIP,
+            };
         }
 
         ReloadHicon(notifyIcon);
 
         notifyIcon.HookWindow.AddHook(notifyIcon.WndProc);
 
-        _ = Interop.Shell32.Shell_NotifyIcon(Interop.Shell32.NIM.ADD, notifyIcon.ShellIconData);
+        _ = PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_ADD, notifyIcon.ShellIconData);
 
         TrayData.NotifyIcons.Add(notifyIcon);
 
@@ -119,7 +125,7 @@ internal static class TrayManager
 
         ReloadHicon(notifyIcon);
 
-        return Interop.Shell32.Shell_NotifyIcon(Interop.Shell32.NIM.MODIFY, notifyIcon.ShellIconData);
+        return PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, notifyIcon.ShellIconData);
     }
 
     public static bool ModifyToolTip(INotifyIcon notifyIcon)
@@ -129,10 +135,13 @@ internal static class TrayManager
             return true;
         }
 
-        notifyIcon.ShellIconData.szTip = notifyIcon.TooltipText;
-        notifyIcon.ShellIconData.uFlags |= Interop.Shell32.NIF.TIP;
+        notifyIcon.ShellIconData = notifyIcon.ShellIconData with
+        {
+            szTip = notifyIcon.TooltipText,
+            uFlags = notifyIcon.ShellIconData.uFlags | NOTIFY_ICON_DATA_FLAGS.NIF_TIP,
+        };
 
-        return Interop.Shell32.Shell_NotifyIcon(Interop.Shell32.NIM.MODIFY, notifyIcon.ShellIconData);
+        return PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_MODIFY, notifyIcon.ShellIconData);
     }
 
     /// <summary>
@@ -140,12 +149,12 @@ internal static class TrayManager
     /// </summary>
     public static bool Unregister(INotifyIcon notifyIcon)
     {
-        if (notifyIcon.ShellIconData == null || !notifyIcon.IsRegistered)
+        if (!notifyIcon.Id.HasValue || !notifyIcon.IsRegistered)
         {
             return false;
         }
 
-        _ = Interop.Shell32.Shell_NotifyIcon(Interop.Shell32.NIM.DELETE, notifyIcon.ShellIconData);
+        _ = PInvoke.Shell_NotifyIcon(NOTIFY_ICON_MESSAGE.NIM_DELETE, notifyIcon.ShellIconData);
 
         notifyIcon.IsRegistered = false;
 
@@ -183,8 +192,11 @@ internal static class TrayManager
 
         if (hIcon != IntPtr.Zero)
         {
-            notifyIcon.ShellIconData.hIcon = hIcon;
-            notifyIcon.ShellIconData.uFlags |= Interop.Shell32.NIF.ICON;
+            notifyIcon.ShellIconData = notifyIcon.ShellIconData with
+            {
+                hIcon = new HICON(hIcon),
+                uFlags = notifyIcon.ShellIconData.uFlags | NOTIFY_ICON_DATA_FLAGS.NIF_ICON,
+            };
         }
     }
 }

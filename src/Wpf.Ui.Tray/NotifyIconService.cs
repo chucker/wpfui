@@ -20,7 +20,7 @@ public class NotifyIconService : INotifyIconService
 
     public Window ParentWindow { get; internal set; } = null!;
 
-    public int Id => internalNotifyIconManager.Id;
+    public uint? Id => internalNotifyIconManager.Id;
 
     public bool IsRegistered => internalNotifyIconManager.IsRegistered;
 

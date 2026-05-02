@@ -13,7 +13,7 @@ internal class TrayHandler : HwndSource
     /// <summary>
     /// Gets or sets the id of the hooked element.
     /// </summary>
-    public int ElementId { get; internal set; }
+    public uint ElementId { get; internal set; }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TrayHandler"/> class, creating a new hWnd as a child with transparency parameters, no size, and in the default position. It attaches the default delegation to the messages it receives.
@@ -23,7 +23,7 @@ internal class TrayHandler : HwndSource
     public TrayHandler(string name, IntPtr parent)
         : base(0x0, 0x4000000, 0x80000 | 0x20 | 0x00000008 | 0x08000000, 0, 0, 0, 0, name, parent)
     {
-        System.Diagnostics.Debug.WriteLine(
+        Debug.WriteLine(
             $"INFO | New {typeof(TrayHandler)} registered with handle: #{Handle}, and parent: #{parent}",
             "Wpf.Ui.TrayHandler"
         );

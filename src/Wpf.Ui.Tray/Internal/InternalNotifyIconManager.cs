@@ -7,6 +7,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
+using Windows.Win32;
+using Windows.Win32.Foundation;
 using Wpf.Ui.Appearance;
 
 namespace Wpf.Ui.Tray.Internal;
@@ -22,7 +24,7 @@ internal class InternalNotifyIconManager : IDisposable, INotifyIcon
     private bool _disposed;
 
     /// <inheritdoc />
-    public int Id { get; set; } = -1;
+    public uint? Id { get; set; } = null;
 
     /// <inheritdoc />
     public bool IsRegistered { get; set; }
@@ -60,7 +62,7 @@ internal class InternalNotifyIconManager : IDisposable, INotifyIcon
     /// <summary>
     /// Gets or sets a set of information for Shell32 to manipulate the icon.
     /// </summary>
-    public Interop.Shell32.NOTIFYICONDATA ShellIconData { get; set; } = default!;
+    public Windows.Win32.UI.Shell.NOTIFYICONDATAW ShellIconData { get; set; } = default!;
 
     public InternalNotifyIconManager()
     {
@@ -177,7 +179,7 @@ internal class InternalNotifyIconManager : IDisposable, INotifyIcon
         }
 
         // Without setting the handler window at the front, menu may appear behind the taskbar
-        _ = Interop.User32.SetForegroundWindow(HookWindow.Handle);
+        _ = PInvoke.SetForegroundWindow(new HWND(HookWindow.Handle));
 
         // Set placement properties for better positioning
         ContextMenu.SetCurrentValue(ContextMenu.PlacementProperty, PlacementMode.MousePoint);
@@ -257,7 +259,7 @@ internal class InternalNotifyIconManager : IDisposable, INotifyIcon
             return;
         }
 
-        System.Diagnostics.Debug.WriteLine(
+        Debug.WriteLine(
             $"INFO | {typeof(NotifyIconService)} disposed.",
             "Wpf.Ui.NotifyIcon"
         );
@@ -268,12 +270,12 @@ internal class InternalNotifyIconManager : IDisposable, INotifyIcon
     /// <inheritdoc />
     public IntPtr WndProc(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        var uMsg = (Interop.User32.WM)msg;
+        var uMsg = (uint)msg;
 
         switch (uMsg)
         {
-            case Interop.User32.WM.DESTROY:
-                System.Diagnostics.Debug.WriteLine(
+            case PInvoke.WM_DESTROY:
+                Debug.WriteLine(
                     $"INFO | {typeof(TrayHandler)} received {uMsg} message.",
                     "Wpf.Ui.NotifyIcon"
                 );
@@ -283,8 +285,8 @@ internal class InternalNotifyIconManager : IDisposable, INotifyIcon
 
                 return IntPtr.Zero;
 
-            case Interop.User32.WM.NCDESTROY:
-                System.Diagnostics.Debug.WriteLine(
+            case PInvoke.WM_NCDESTROY:
+                Debug.WriteLine(
                     $"INFO | {typeof(TrayHandler)} received {uMsg} message.",
                     "Wpf.Ui.NotifyIcon"
                 );
@@ -292,8 +294,8 @@ internal class InternalNotifyIconManager : IDisposable, INotifyIcon
 
                 return IntPtr.Zero;
 
-            case Interop.User32.WM.CLOSE:
-                System.Diagnostics.Debug.WriteLine(
+            case PInvoke.WM_CLOSE:
+                Debug.WriteLine(
                     $"INFO | {typeof(TrayHandler)} received {uMsg} message.",
                     "Wpf.Ui.NotifyIcon"
                 );
@@ -302,18 +304,18 @@ internal class InternalNotifyIconManager : IDisposable, INotifyIcon
                 return IntPtr.Zero;
         }
 
-        if (uMsg != Interop.User32.WM.TRAYMOUSEMESSAGE)
+        if (uMsg != PInvoke.WM_TRAYMOUSEMESSAGE)
         {
             handled = false;
 
             return IntPtr.Zero;
         }
 
-        var lMsg = (Interop.User32.WM)lParam;
+        var lMsg = (uint)lParam;
 
         switch (lMsg)
         {
-            case Interop.User32.WM.LBUTTONDOWN:
+            case PInvoke.WM_LBUTTONDOWN:
                 OnLeftClick();
 
                 if (FocusOnLeftClick)
@@ -323,11 +325,11 @@ internal class InternalNotifyIconManager : IDisposable, INotifyIcon
 
                 break;
 
-            case Interop.User32.WM.LBUTTONDBLCLK:
+            case PInvoke.WM_LBUTTONDBLCLK:
                 OnLeftDoubleClick();
                 break;
 
-            case Interop.User32.WM.RBUTTONDOWN:
+            case PInvoke.WM_RBUTTONDOWN:
                 OnRightClick();
 
                 if (MenuOnRightClick)
@@ -337,15 +339,15 @@ internal class InternalNotifyIconManager : IDisposable, INotifyIcon
 
                 break;
 
-            case Interop.User32.WM.RBUTTONDBLCLK:
+            case PInvoke.WM_RBUTTONDBLCLK:
                 OnRightDoubleClick();
                 break;
 
-            case Interop.User32.WM.MBUTTONDOWN:
+            case PInvoke.WM_MBUTTONDOWN:
                 OnMiddleClick();
                 break;
 
-            case Interop.User32.WM.MBUTTONDBLCLK:
+            case PInvoke.WM_MBUTTONDBLCLK:
                 OnMiddleDoubleClick();
                 break;
         }
